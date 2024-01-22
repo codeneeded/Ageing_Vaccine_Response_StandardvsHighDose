@@ -42,8 +42,14 @@ for (i in 2:17) {
 
 ##### PCA #########
 # Assuming your list of databases is stored in list_of_dataframes_1
-# 1. Clean the Demographics Dataframe
+# Clean the Demographics Dataframe
 demographics <- list_of_dataframes_1[[1]][, !(names(list_of_dataframes_1[[1]]) %in% c("Season SD", "Season HD"))]
+
+# Function to calculate mode
+getMode <- function(v) {
+  uniqv <- unique(na.omit(v))
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
 
 # Function to create PCA plot and save it
 create_pca_plot <- function(data, title) {
@@ -65,9 +71,6 @@ create_pca_plot <- function(data, title) {
     scale_fill_manual(values = c("Standard" = "lightblue", "High" = "lightgreen"),
                       name = "Dose Type",
                       breaks = c("High", "Standard"))
-  
-  # Save the plot
-  ggsave(filename, pca_plot, width = 10, height = 8)
 }
 
 # Function to create PCA plot
@@ -83,6 +86,7 @@ create_pca_subplot <- function(data, title) {
     theme_minimal() +
     ggtitle(title)
 }
+
 # Main loop for processing each SD and HD pair
 for (i in seq(2, length(list_of_dataframes_1), by = 2)) {
   # Prepare Standard and High Dose Dataframes
@@ -118,27 +122,27 @@ for (i in seq(2, length(list_of_dataframes_1), by = 2)) {
   final_data_clean$`HIV status`[final_data_clean$`HIV status` == "Control"] <- "Negative"
   
   # Perform PCA
-  final_data_pca <- prcomp(final_data_imputed[, sapply(final_data_imputed, is.numeric)], center = TRUE, scale. = TRUE)
+  final_data_pca <- prcomp(final_data_clean[, sapply(final_data_clean, is.numeric)], center = TRUE, scale. = TRUE)
   
   # Extract PCA scores
   pca_scores <- as.data.frame(final_data_pca$x)
-  plot_data <- cbind(pca_scores, final_data_imputed[, c("HIV status", "Age Group", "dose_type")])
+  plot_data <- cbind(pca_scores, final_data_clean[, c("HIV status", "Age Group", "dose_type")])
   
   # Create PCA plot
   pair_name <- gsub(" ", "_", names(list_of_dataframes_1)[i])
   # Create and save PCA plot
   overall_pca_plot <- create_pca_plot(plot_data, paste0("Overall ",pair_name," PCA"))
-  ggsave(paste0("Overall_PCA_", pair_name, ".png"), overall_pca_plot, width = 10, height = 8, path=out.path)
+  ggsave(paste0("Overall_PCA_", pair_name, ".png"), overall_pca_plot, width = 10, height = 8, path=out.path, bg = "white")
   
   # Create and Save PCA subplot
   # Subset data for HIV Positive and Negative
   hiv_positive_data <- subset(plot_data, `HIV status` == "Positive")
   hiv_negative_data <- subset(plot_data, `HIV status` == "Negative")
   # Create and display plots for HIV Positive and HIV Negative
-  pca_plot_hiv_positive <- create_pca_plot(hiv_positive_data, paste("HIV Positive - ", pair_name))
-  pca_plot_hiv_negative <- create_pca_plot(hiv_negative_data, paste("HIV Negative - ", pair_name))
+  pca_plot_hiv_positive <- create_pca_subplot(hiv_positive_data, paste("HIV Positive - ", pair_name))
+  pca_plot_hiv_negative <- create_pca_subplot(hiv_negative_data, paste("HIV Negative - ", pair_name))
   
   # Save the HIV status specific plots
-  ggsave(paste0("HIV_Positive_PCA_", pair_name, ".png"), pca_plot_hiv_positive, width = 10, height = 8, path=out.path)
-  ggsave(paste0("HIV_Negative_PCA_", pair_name, ".png"), pca_plot_hiv_negative, width = 10, height = 8, path=out.path)
+  ggsave(paste0("HIV_Positive_PCA_", pair_name, ".png"), pca_plot_hiv_positive, width = 10, height = 8, path=out.path, bg = "white")
+  ggsave(paste0("HIV_Negative_PCA_", pair_name, ".png"), pca_plot_hiv_negative, width = 10, height = 8, path=out.path, bg = "white")
   }
