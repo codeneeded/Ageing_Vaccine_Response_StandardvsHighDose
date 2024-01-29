@@ -32,7 +32,7 @@ list_of_dataframes_2 <- lapply(list_of_dataframes_2, function(df) {
 # Remove the first data frame from the list
 list_of_dataframes_1 <- list_of_dataframes_1[-1]
 
-
+list_of_dataframes_1[[17]]
 # Standardize Column Names for Standard Dose and High Dose dataframes
 # Loop through databases 2 to 17 to standardize column names
 for (i in 2:17) {
@@ -88,7 +88,7 @@ create_pca_subplot <- function(data, title) {
 }
 
 # Main loop for processing each SD and HD pair
-for (i in seq(2, length(list_of_dataframes_1), by = 2)) {
+for (i in seq(2, 17, by = 2)) {
   # Prepare Standard and High Dose Dataframes
   standard_dose <- list_of_dataframes_1[[i]]
   standard_dose$dose_type <- 'Standard'
@@ -107,6 +107,7 @@ for (i in seq(2, length(list_of_dataframes_1), by = 2)) {
   rows_with_all_na <- rowSums(is.na(final_data[c("T0", "T3")])) == 2
   final_data_clean <- final_data[!rows_with_all_na, ]
   final_data_clean <- subset(final_data_clean, select = -T4)
+  final_data_clean <- subset(final_data_clean, select = -Age)
   
   # Impute Missing Data
   # Mode Imputation for Categorical Variables
@@ -130,6 +131,7 @@ for (i in seq(2, length(list_of_dataframes_1), by = 2)) {
   
   # Create PCA plot
   pair_name <- gsub(" ", "_", names(list_of_dataframes_1)[i])
+  pair_name <- gsub("_SD_", "_", pair_name)
   # Create and save PCA plot
   overall_pca_plot <- create_pca_plot(plot_data, paste0("Overall ",pair_name," PCA"))
   ggsave(paste0("Overall_PCA_", pair_name, ".png"), overall_pca_plot, width = 10, height = 8, path=out.path, bg = "white")
@@ -145,4 +147,5 @@ for (i in seq(2, length(list_of_dataframes_1), by = 2)) {
   # Save the HIV status specific plots
   ggsave(paste0("HIV_Positive_PCA_", pair_name, ".png"), pca_plot_hiv_positive, width = 10, height = 8, path=out.path, bg = "white")
   ggsave(paste0("HIV_Negative_PCA_", pair_name, ".png"), pca_plot_hiv_negative, width = 10, height = 8, path=out.path, bg = "white")
-  }
+}
+
